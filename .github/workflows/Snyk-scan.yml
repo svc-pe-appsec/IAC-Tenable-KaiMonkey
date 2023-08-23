@@ -1,0 +1,43 @@
+name: snyk-iac-scan
+
+on: 
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: $GITHUB_WORKFLOW:$GITHUB_RUN_ID
+
+jobs:
+  Build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+
+      - name: Check out Code
+        uses: actions/checkout@v3
+
+      - name: echoing the file name
+        run: echo $GITHUB_WORKFLOW:$GITHUB_RUN_ID
+
+      # Install and Authenticate to Snyk
+      - name: Install Snyk & Authenticate
+        run: |
+          sudo npm install -g snyk
+          sudo npm i -g snyk-filter
+          snyk --version
+          snyk auth ${{secrets.SNYK_AUTH}}
+
+      - name: Snyk IaC # Remove || true to fail if there are vulnerabilities
+        run: |
+            snyk iac test || true
+                    
+#      - name: Building Docker Images
+#        run: |
+#          echo ${{env.IMAGE_NAME}}
+#          docker image build -t $GITHUB_WORKFLOW:$GITHUB_RUN_ID . 
+     
+#      - name: Snyk Container # Rename your image, for testing and failing please add snyk container test before snyk container monitor
+#        run: |
+#            docker build . -t yourimage:tag
+#            snyk container monitor $GITHUB_WORKFLOW:$GITHUB_RUN_ID --file=Dockerfile
+            
